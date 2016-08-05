@@ -97,7 +97,7 @@ export const isConformant = (Component, requiredProps = {}) => {
   // avoid false positives like DropdownItem & MenuItem
   //   which both have sub component names of "Item", and appear
   //   on both Dropdown.Item and Menu.Item (not to mention Stardust.Item)
-  const isSubComponent = _.isFunction(_.get(stardust, `[${_.get(_meta, 'parent')}][${subComponentName}]`))
+  const isSubComponent = _.isFunction(_.get(stardust, constructorName.split(/(?=[A-Z])/)))
 
   if (META.isPrivate(constructorName)) {
     it('is not exported as a component nor sub component', () => {
@@ -267,8 +267,11 @@ export const isConformant = (Component, requiredProps = {}) => {
     // TODO: do not exclude headers once their APIs are updated
     if (!isHeader && META.isSemanticUI(Component)) {
       it(`has the Semantic UI className "${componentClassName}"`, () => {
-        render(<Component {...requiredProps} />)
-          .should.have.className(componentClassName)
+        const wrapper = render(<Component {...requiredProps} />)
+        // don't test components with no className at all (i.e. MessageListItem)
+        if (wrapper.prop('className')) {
+          wrapper.should.have.className(componentClassName)
+        }
       })
     }
 
@@ -574,7 +577,7 @@ export const implementsVerticalAlignProp = (Component, requiredProps = {}) => {
     _.each(Component._meta.props.verticalAlign, (propVal) => {
       it(`adds "${propVal} aligned" to className`, () => {
         shallow(<Component { ...requiredProps } verticalAlign={propVal} />)
-            .should.have.className(`${propVal} ${'aligned'}`)
+          .should.have.className(`${propVal} ${'aligned'}`)
       })
     })
   })
